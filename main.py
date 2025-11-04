@@ -4,6 +4,9 @@ import requests
 from remotezip import RemoteZip
 import os
 import shutil
+from dotenv import load_dotenv
+load_dotenv()
+TOKEN = os.getenv('BOT_TOKEN')
 
 
 def format_bytes(size):
@@ -59,8 +62,6 @@ def displayFIlePicker(message: types.Message, files: list, archive_url: str):
     )
 
 
-TOKEN = "7618501060:AAG4JHNv_a7c_argdSz58-gVKnbmrncuVCw"
-
 debug_mode = True
 
 
@@ -87,6 +88,7 @@ def send_welcome(message):
 
 @bot.message_handler(content_types=['document'])
 def handle_forwarded_file(message:  types.Message):
+    debug_print("wzp!")
     archive_name = message.document.file_name
     if (not archive_name.endswith(".zip")):
         bot.reply_to(message, "Only ZIP files currently supported!")
