@@ -88,7 +88,6 @@ def send_welcome(message):
 
 @bot.message_handler(content_types=['document'])
 def handle_forwarded_file(message:  types.Message):
-    debug_print("wzp!")
     archive_name = message.document.file_name
     if (not archive_name.endswith(".zip")):
         bot.reply_to(message, "Only ZIP files currently supported!")
