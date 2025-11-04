@@ -126,8 +126,9 @@ def callback_query(call: types.CallbackQuery):
     debug_print("PARENT", parent_dir)
     with open(local_file, "r") as f:
         bot.send_document(call.message.chat.id, f)
+
     if not keep_temps:
-        shutil.rmtree(parent_dir)
+        shutil.rmtree("temp")
 
 
 def main():
