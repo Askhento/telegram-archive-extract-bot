@@ -20,7 +20,7 @@ def format_bytes(size):
     return size, power_labels[n]+'bytes'
 
 
-def getFileList(url, file_id):
+def getFileList(url):
     res = []
     with RemoteZip(url) as zip:
         for zip_info in zip.infolist():
@@ -35,8 +35,15 @@ def getFileList(url, file_id):
 
 
 def extractZip(file, url):
-    with RemoteZip(url) as zip:
-        return zip.extract(file, "temp")
+    # with RemoteZip(url) as zip:
+    #     return zip.extract(file, "temp")
+    try:
+        zip = RemoteZip(url)
+    except:
+        return None
+    else:
+        with zip:
+            return zip.extract(file, "temp")
 
 
 def testContentRange(url):
@@ -46,7 +53,7 @@ def testContentRange(url):
     print(r.text)
 
 
-def displayFIlePicker(message: types.Message, files: list, archive_url: str):
+def displayFIlePicker(message: types.Message, files: list, file_id: str):
     # print(files)
     keyboard = types.InlineKeyboardMarkup(row_width=1)
     buttons = [types.InlineKeyboardButton(
@@ -55,7 +62,7 @@ def displayFIlePicker(message: types.Message, files: list, archive_url: str):
 
     bot.send_message(
         message.chat.id,
-        f"{archive_url}\nChoose file from list : ",
+        f"file_id:{file_id}\nChoose file from list : ",
         reply_markup=keyboard,
         reply_parameters=types.ReplyParameters(message_id=message.message_id),
 
@@ -96,15 +103,14 @@ def handle_forwarded_file(message:  types.Message):
     if message.document:
         file_id = message.document.file_id
         file_info = bot.get_file(file_id)
-
         archive_url = f"https://api.telegram.org/file/bot{TOKEN}/{file_info.file_path}"
         # current_user_archive[message.from_user.id] = archive_url
         # bot.reply_to(message, f"Forwarded file URL: {archive_url}")
 
-        files = getFileList(archive_url, file_id)
+        files = getFileList(archive_url)
 
         # bot.reply_to(message, files)
-        displayFIlePicker(message, files, archive_url)
+        displayFIlePicker(message, files, file_id)
 
     else:
         bot.reply_to(message, "No document found in the forwarded message")
@@ -116,11 +122,23 @@ def callback_query(call: types.CallbackQuery):
     bot.answer_callback_query(call.id, f"Loading : {call.data}")
 
     filename = call.data
-    archive_url = call.message.text.split("\n")[0]
+    file_id = call.message.text.split("\n")[0][8:]
+
+    try:
+        file_info = bot.get_file(file_id)
+        archive_url = f"https://api.telegram.org/file/bot{TOKEN}/{file_info.file_path}"
+    except telebot.apihelper.ApiTelegramException as err:
+        bot.send_message(call.message.chat.id, err.description)
+        return
 
     debug_print(f"will extract {filename} at {archive_url}")
 
     local_file = extractZip(filename, archive_url)
+
+    if not local_file:
+        bot.send_message(call.message.chat.id, "Error, maybe link too old!")
+        return
+
     debug_print("LOCAL", local_file)
 
     parent_dir = os.path.dirname(local_file)
