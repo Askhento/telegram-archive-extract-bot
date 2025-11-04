@@ -148,7 +148,7 @@ def main():
     global keep_temps
     keep_temps = args.keeptemp
 
-    bot.infinity_polling()
+    bot.infinity_polling(interval=5)
 
 
 if __name__ == "__main__":
