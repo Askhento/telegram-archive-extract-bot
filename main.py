@@ -102,8 +102,15 @@ def handle_forwarded_file(message:  types.Message):
     # Example for a forwarded document file
     if message.document:
         file_id = message.document.file_id
-        file_info = bot.get_file(file_id)
-        archive_url = f"https://api.telegram.org/file/bot{TOKEN}/{file_info.file_path}"
+
+        try:
+            file_info = bot.get_file(file_id)
+            archive_url = f"https://api.telegram.org/file/bot{TOKEN}/{file_info.file_path}"
+        except telebot.apihelper.ApiTelegramException as err:
+            print(err)
+            bot.send_message(message.chat.id, err.description)
+            return
+
         # current_user_archive[message.from_user.id] = archive_url
         # bot.reply_to(message, f"Forwarded file URL: {archive_url}")
 
